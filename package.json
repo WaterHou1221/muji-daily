@@ -1,0 +1,15 @@
+{
+  "name": "muji-daily",
+  "version": "1.0.0",
+  "private": true,
+  "description": "无印良品中国官网折扣商品每日监控，推送到企业微信",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test tests/",
+    "dry-run": "node scripts/daily.js --state=./state --dry-run",
+    "daily": "node scripts/daily.js --state=./state"
+  }
+}

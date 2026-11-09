@@ -1,0 +1,72 @@
+name: muji-daily
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 强制重跑当天（跳过同一天已有快照）
+        type: boolean
+        default: false
+      dry_run:
+        description: 只渲染消息，不推送、不写状态
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: muji-daily
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run daily job
+        env:
+          WECOM_WEBHOOK: ${{ secrets.WECOM_WEBHOOK }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          FORCE: ${{ inputs.force }}
+          TZ: Asia/Shanghai
+        run: node scripts/daily.js --state=./state
+
+      - name: Commit state
+        if: always()
+        run: |
+          if [ ! -d state ]; then
+            echo "no state directory"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state
+          if git diff --cached --quiet; then
+            echo "no state changes"
+            exit 0
+          fi
+          git commit -m "data: $(date -u +%F) state update"
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && break
+            sleep 5
+          done
+
+      - name: Job summary
+        if: always()
+        run: |
+          if [ -f state/last_run_summary.md ]; then
+            cat state/last_run_summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
