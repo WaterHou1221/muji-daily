@@ -45,13 +45,20 @@ function pickBestSku(discounted) {
 
 export function buildDiscounts(details, catalog, index) {
   const products = [];
+  const soldOut = [];
   const { lineMap = new Map(), topByCat1 = {} } = index || {};
 
   for (const detail of details) {
     const base = catalog.get(detail.id) || {};
-    const skus = (detail.skus || []).filter((sku) => Number(sku.mktPrice) > 0);
-    const discounted = skus.filter((sku) => Number(sku.price) < Number(sku.mktPrice));
-    if (!discounted.length) continue;
+    const valid = (detail.skus || []).filter((sku) => Number(sku.mktPrice) > 0);
+    const available = valid.filter((sku) => Number(sku.stock) > 0);
+    const discounted = available.filter((sku) => Number(sku.price) < Number(sku.mktPrice));
+    if (!discounted.length) {
+      if (valid.some((sku) => Number(sku.price) < Number(sku.mktPrice))) {
+        soldOut.push({ id: detail.id, name: String(detail.name || '').trim() });
+      }
+      continue;
+    }
 
     const best = pickBestSku(discounted);
     const mapped = lineMap.get(base.selLineCd);
@@ -80,13 +87,13 @@ export function buildDiscounts(details, catalog, index) {
       price,
       mkt,
       rate: Number((price / mkt).toFixed(4)),
-      partial: discounted.length < skus.length,
-      skuCount: skus.length,
+      partial: discounted.length < available.length,
+      skuCount: available.length,
       discSkuCount: discounted.length,
-      inStockSkus: discounted.filter((sku) => Number(sku.stock) > 0).length,
+      inStockSkus: discounted.length,
       stock: discounted.reduce((sum, sku) => sum + (Number(sku.stock) || 0), 0),
       promos: [...new Set((detail.promotions || []).map((promo) => promo.name).filter(Boolean))],
-      skus: skus.map((sku) => ({
+      skus: available.map((sku) => ({
         skuCd: sku.skuCd,
         size: sku.sizeName || '',
         color: sku.colorName || '',
@@ -98,5 +105,5 @@ export function buildDiscounts(details, catalog, index) {
   }
 
   const byId = new Map(products.map((product) => [product.id, product]));
-  return { products, byId };
+  return { products, soldOut, byId };
 }

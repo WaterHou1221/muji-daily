@@ -3,6 +3,7 @@ import { ITEMS_PER_MESSAGE, MAX_PAGES_PER_SECTION, MESSAGE_BYTE_LIMIT } from './
 const REASON_TEXT = {
   restored: '已恢复原价',
   delisted: '已下架',
+  soldout: '已售罄',
   missing: '数据缺失',
 };
 

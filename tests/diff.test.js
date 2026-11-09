@@ -43,12 +43,13 @@ test('连续失败超过 3 天降级为数据缺失', () => {
   assert.deepEqual(diff.expired.map((item) => [item.id, item.reason]), [[1, 'missing']]);
 });
 
-test('售罄单独统计，不算失效', () => {
-  const curr = [product(1, 0.7, { inStockSkus: 0 })];
-  const diff = compare([], curr, {});
+test('售罄导致的失效标记为 soldout', () => {
+  const prev = [product(1, 0.7)];
+  const diff = compare(prev, [], { soldOut: [{ id: 1, name: '商品1' }] });
 
-  assert.equal(diff.soldOut.length, 1);
-  assert.equal(diff.expired.length, 0);
+  assert.equal(diff.expired.length, 1);
+  assert.equal(diff.expired[0].reason, 'soldout');
+  assert.equal(diff.stats.soldOut, 1);
 });
 
 test('折扣总数过少时触发异常', () => {

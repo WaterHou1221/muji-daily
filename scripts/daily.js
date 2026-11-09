@@ -33,7 +33,7 @@ function writeSummary(stateDir, { today, products, diff, failures, messageCount,
     `- 折扣商品：${products.length} 款`,
     `- 新增：${diff.added.length} 款`,
     `- 失效：${diff.expired.length} 款`,
-    `- 售罄（仍有折扣价）：${diff.soldOut.length} 款`,
+    `- 售罄未计入：${diff.soldOut.length} 款`,
     `- 详情失败：${failures.length} 个`,
     `- 消息：${messageCount} 条，失败 ${failedCount} 条`,
     `- 耗时：${elapsed}s`,
@@ -77,8 +77,8 @@ async function main() {
   log(`  详情成功 ${details.length} 个，失败 ${failures.length} 个`);
 
   log(`[3/6] 计算折扣`);
-  const { products } = buildDiscounts(details, catalog, index);
-  log(`  折扣商品 ${products.length} 款`);
+  const { products, soldOut } = buildDiscounts(details, catalog, index);
+  log(`  折扣商品 ${products.length} 款（另有 ${soldOut.length} 款折扣规格全部无货，未纳入）`);
 
   const prev = last ? store.loadSnapshot(stateDir, last.date) : null;
   if (last && !prev) log(`  [warn] 找不到 ${last.date} 的快照，按首次运行处理`);
@@ -89,6 +89,7 @@ async function main() {
     catalogIds: new Set(catalog.keys()),
     failures,
     history: last?.history || [],
+    soldOut,
   });
 
   const mode = prev ? 'normal' : 'init';

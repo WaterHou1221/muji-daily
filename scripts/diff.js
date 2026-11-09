@@ -22,10 +22,12 @@ export function compare(prevProducts = [], currProducts = [], {
   catalogIds = new Set(),
   failures = [],
   history = [],
+  soldOut = [],
 } = {}) {
   const prevMap = new Map(prevProducts.map((product) => [product.id, product]));
   const currMap = new Map(currProducts.map((product) => [product.id, product]));
   const failedIds = new Set(failures.map((item) => item.id));
+  const soldOutIds = new Set(soldOut.map((item) => item.id));
 
   const carried = [];
   for (const [id, prev] of prevMap) {
@@ -44,12 +46,12 @@ export function compare(prevProducts = [], currProducts = [], {
       ...product,
       reason: failedIds.has(product.id)
         ? 'missing'
-        : catalogIds.has(product.id)
-          ? 'restored'
-          : 'delisted',
+        : soldOutIds.has(product.id)
+          ? 'soldout'
+          : catalogIds.has(product.id)
+            ? 'restored'
+            : 'delisted',
     }));
-
-  const soldOut = [...currMap.values()].filter((product) => !product.stale && product.inStockSkus === 0);
 
   const deepened = [...currMap.values()].filter((product) => {
     const prev = prevMap.get(product.id);

@@ -86,7 +86,7 @@ function csvCell(value) {
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
-const REPORT_REASON_TEXT = { restored: '已恢复原价', delisted: '已下架', missing: '数据缺失' };
+const REPORT_REASON_TEXT = { restored: '已恢复原价', delisted: '已下架', soldout: '已售罄', missing: '数据缺失' };
 
 function reportLine(product, number) {
   return `${number}. ${product.name}｜¥${product.price}（原¥${product.mkt}，${(product.rate * 10).toFixed(1)}折）`;
@@ -124,7 +124,7 @@ export function buildReportMarkdown(date, { products, diff, mode = 'normal' }) {
     `- 当前折扣商品：${products.length} 款`,
     `- 新增：${diff.added.length} 款`,
     `- 失效：${diff.expired.length} 款`,
-    `- 售罄（仍有折扣价）：${diff.soldOut.length} 款`,
+    `- 售罄未计入：${diff.soldOut.length} 款`,
     '',
   ];
   appendSection(lines, mode === 'init' ? '初始基线商品' : '新增折扣', diff.added, reportLine);
@@ -137,7 +137,7 @@ export function writeReports(stateDir, date, { products, diff, mode = 'normal' }
 
   const header = [
     '商品ID', '商品名称', '一级分类', '二级分类', '现价(元)', '原价(元)', '折扣',
-    '规格', '颜色', '部分规格', '折扣规格数', '总规格数', '库存', '活动', '商品链接',
+    '规格', '颜色', '部分规格', '折扣规格数', '有货规格数', '库存', '活动', '商品链接',
   ];
   const lines = [header.join(',')];
   for (const product of products) {

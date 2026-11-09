@@ -79,6 +79,12 @@ test('单类超过 750 款时截断并提示', () => {
   assert.match(addedPages[29].content, /其余 50 款未发送（单日上限）/);
 });
 
+test('失效原因支持“已售罄”', () => {
+  const expired = [product(1, 0.5, { reason: 'soldout', name: '【芳香油】香精油' })];
+  const messages = buildMessages({ mode: 'normal', diff: diffOf([], expired), date: '2026-11-09' });
+  assert.match(messages[2].content, /【芳香油】香精油｜¥50（原¥100，5\.0折）→ 已售罄/);
+});
+
 test('首次运行只发一条初始化消息', () => {
   const messages = buildMessages({ mode: 'init', diff: diffOf(), date: '2026-11-09' });
   assert.equal(messages.length, 1);
