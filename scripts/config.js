@@ -25,6 +25,6 @@ export const ANOMALY_MAX_CHANGES = 400;
 export const DETAIL_FAIL_RATE_MAX = 0.05;
 
 export const STALE_MAX_DAYS = 3;
-export const SNAPSHOT_RETAIN_DAYS = 90;
-export const REPORT_RETAIN_DAYS = 180;
+export const SNAPSHOT_RETAIN_DAYS = 30;
+export const REPORT_RETAIN_DAYS = 30;
 export const HISTORY_LENGTH = 14;

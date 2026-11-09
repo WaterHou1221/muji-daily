@@ -86,8 +86,8 @@ node tests/diff.test.js     # 单文件（受限环境可用）
 
 ## 状态与保留
 
-- `state/snapshots/YYYY-MM-DD.json.gz`：每日快照（商品级 + SKU 级），保留 90 天。
-- `state/reports/YYYY-MM-DD.csv|md`：日报明细，保留 180 天。
+- `state/snapshots/YYYY-MM-DD.json.gz`：每日快照（商品级 + SKU 级），保留 30 天。
+- `state/reports/YYYY-MM-DD.csv|md`：日报明细，保留 30 天。
 - `state/last_success.json`：最后一次成功日期、计数、近 14 次总数（用于异常波动判断）。
 - `state/outbox.json`：推送失败待补发的消息，次日以【补发】前缀重发。
 
