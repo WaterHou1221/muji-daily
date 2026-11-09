@@ -130,7 +130,7 @@ async function main() {
     total: products.length,
     products,
   });
-  store.writeReports(stateDir, today, { products, diff });
+  store.writeReports(stateDir, today, { products, diff, mode });
   store.saveLastSuccess(stateDir, {
     version: 1,
     date: today,

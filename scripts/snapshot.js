@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 
-import { HISTORY_LENGTH, REPORT_RETAIN_DAYS, SNAPSHOT_RETAIN_DAYS } from './config.js';
+import { HISTORY_LENGTH, ITEMS_PER_MESSAGE, REPORT_RETAIN_DAYS, SNAPSHOT_RETAIN_DAYS } from './config.js';
 
 export function cstDate(date = new Date()) {
   return new Intl.DateTimeFormat('en-CA', {
@@ -86,7 +86,53 @@ function csvCell(value) {
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
-export function writeReports(stateDir, date, { products, diff }) {
+const REPORT_REASON_TEXT = { restored: '已恢复原价', delisted: '已下架', missing: '数据缺失' };
+
+function reportLine(product, number) {
+  return `${number}. ${product.name}｜¥${product.price}（原¥${product.mkt}，${(product.rate * 10).toFixed(1)}折）`;
+}
+
+function expiredLine(product, number) {
+  return `${reportLine(product, number)}→ ${REPORT_REASON_TEXT[product.reason] || '已失效'}`;
+}
+
+function appendSection(lines, title, items, lineFn) {
+  if (!items.length) {
+    lines.push(`## ${title}（0 款）`, '', `今日无${title}`, '');
+    return;
+  }
+
+  const pages = Math.ceil(items.length / ITEMS_PER_MESSAGE);
+  lines.push(`## ${title}（共 ${items.length} 款）`, '');
+  for (let page = 0; page < pages; page += 1) {
+    const chunk = items.slice(page * ITEMS_PER_MESSAGE, (page + 1) * ITEMS_PER_MESSAGE);
+    lines.push(`### ${title}（${page + 1}/${pages}）`, '');
+    chunk.forEach((product, offset) => {
+      lines.push(lineFn(product, page * ITEMS_PER_MESSAGE + offset + 1));
+    });
+    lines.push('');
+  }
+}
+
+/**
+ * 可读版日报：与微信消息保持一致，每 25 条一个分页，但收录全部条目（不截断）。
+ */
+export function buildReportMarkdown(date, { products, diff, mode = 'normal' }) {
+  const lines = [
+    `# MUJI 折扣日报 ${date}`,
+    '',
+    `- 当前折扣商品：${products.length} 款`,
+    `- 新增：${diff.added.length} 款`,
+    `- 失效：${diff.expired.length} 款`,
+    `- 售罄（仍有折扣价）：${diff.soldOut.length} 款`,
+    '',
+  ];
+  appendSection(lines, mode === 'init' ? '初始基线商品' : '新增折扣', diff.added, reportLine);
+  appendSection(lines, '失效折扣', diff.expired, expiredLine);
+  return lines.join('\n');
+}
+
+export function writeReports(stateDir, date, { products, diff, mode = 'normal' }) {
   ensureDir(path.join(stateDir, 'reports'));
 
   const header = [
@@ -115,26 +161,7 @@ export function writeReports(stateDir, date, { products, diff }) {
     ].join(','));
   }
   writeFileAtomic(paths.reportCsv(stateDir, date), `\uFEFF${lines.join('\n')}\n`);
-
-  const reasonText = { restored: '已恢复原价', delisted: '已下架', missing: '数据缺失' };
-  const md = [
-    `# MUJI 折扣日报 ${date}`,
-    '',
-    `- 当前折扣商品：${products.length} 款`,
-    `- 新增：${diff.added.length} 款`,
-    `- 失效：${diff.expired.length} 款`,
-    `- 售罄（仍有折扣价）：${diff.soldOut.length} 款`,
-    '',
-    '## 新增（前 50）',
-    '',
-    ...diff.added.slice(0, 50).map((p, i) => `${i + 1}. ${p.name}｜¥${p.price}（原¥${p.mkt}，${(p.rate * 10).toFixed(1)}折）`),
-    '',
-    '## 失效（前 50）',
-    '',
-    ...diff.expired.slice(0, 50).map((p, i) => `${i + 1}. ${p.name}｜¥${p.price}（原¥${p.mkt}，${(p.rate * 10).toFixed(1)}折）→ ${reasonText[p.reason] || '已失效'}`),
-    '',
-  ].join('\n');
-  writeFileAtomic(paths.reportMd(stateDir, date), md);
+  writeFileAtomic(paths.reportMd(stateDir, date), buildReportMarkdown(date, { products, diff, mode }));
 }
 
 export function prune(stateDir, today, {
