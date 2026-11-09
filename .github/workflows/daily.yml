@@ -36,6 +36,9 @@ jobs:
         with:
           node-version: 20
 
+      - name: Unit tests
+        run: node --test tests/
+
       - name: Run daily job
         env:
           WECOM_WEBHOOK: ${{ secrets.WECOM_WEBHOOK }}
