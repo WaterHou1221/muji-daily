@@ -1,0 +1,16 @@
+{
+ "version": 1,
+ "date": "2026-11-09",
+ "runAt": "2026-11-09T12:19:41.730Z",
+ "mode": "init",
+ "total": 1122,
+ "added": 1122,
+ "expired": 0,
+ "soldOut": 186,
+ "history": [
+  {
+   "date": "2026-11-09",
+   "total": 1122
+  }
+ ]
+}
