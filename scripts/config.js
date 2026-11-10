@@ -28,3 +28,17 @@ export const STALE_MAX_DAYS = 3;
 export const SNAPSHOT_RETAIN_DAYS = 30;
 export const REPORT_RETAIN_DAYS = 30;
 export const HISTORY_LENGTH = 14;
+
+// 过滤规则版本：修改过滤条件时递增，触发基线重建
+export const FILTER_VERSION = 2;
+
+// 规则①：按分类整类排除
+export const EXCLUDE_CAT1 = ['女式服装', '女式内衣/睡衣', '美妆护肤', '芳香用品', '童装'];
+export const EXCLUDE_CAT2 = ['鞋类'];
+
+// 规则②：在这些二级分类里，商品名命中女性关键词则排除
+export const NAME_FILTER_CAT1 = ['MUJI LABO', 'MUJI IDÉE WEAR', 'MUJI IDÉE', '服饰杂货', '鞋包'];
+
+// 规则③：仅 sizeCd=003（男式/通用 M）算 M 号；M 号全部无货则排除整个 SPU
+export const M_SIZE_CDS = ['003'];
+export const M_SIZE_TOP = '衣服·杂货';

@@ -43,13 +43,23 @@ function pickBestSku(discounted) {
   return best;
 }
 
+export function resolveCategory(detail, base, index) {
+  const { lineMap = new Map(), topByCat1 = {} } = index || {};
+  const mapped = lineMap.get(base.selLineCd);
+  const inferred = mapped ? null : inferCategory(detail.name, detail.sex);
+  const cat1 = mapped ? mapped.cat1 : inferred.cat1;
+  const cat2 = mapped ? mapped.cat2 : inferred.cat2;
+  const top = topByCat1[cat1] || base.topCategory || '未分类';
+  return { top, cat1: cat1 || '未分类', cat2: cat2 || '未细分' };
+}
+
 export function buildDiscounts(details, catalog, index) {
   const products = [];
   const soldOut = [];
-  const { lineMap = new Map(), topByCat1 = {} } = index || {};
 
   for (const detail of details) {
     const base = catalog.get(detail.id) || {};
+    const { top, cat1, cat2 } = resolveCategory(detail, base, index);
     const valid = (detail.skus || []).filter((sku) => Number(sku.mktPrice) > 0);
     const available = valid.filter((sku) => Number(sku.stock) > 0);
     const discounted = available.filter((sku) => Number(sku.price) < Number(sku.mktPrice));
@@ -61,11 +71,6 @@ export function buildDiscounts(details, catalog, index) {
     }
 
     const best = pickBestSku(discounted);
-    const mapped = lineMap.get(base.selLineCd);
-    const inferred = mapped ? null : inferCategory(detail.name, detail.sex);
-    const cat1 = mapped ? mapped.cat1 : inferred.cat1;
-    const cat2 = mapped ? mapped.cat2 : inferred.cat2;
-    const top = topByCat1[cat1] || base.topCategory || '未分类';
     const price = Number(best.price);
     const mkt = Number(best.mktPrice);
 
