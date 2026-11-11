@@ -28,14 +28,27 @@ function rateText(rate) {
   return `${(Number(rate) * 10).toFixed(1)}折`;
 }
 
+function linkText(name) {
+  return String(name || '').replaceAll('[', '［').replaceAll(']', '］');
+}
+
+function productLink(product) {
+  if (product.url) return product.url;
+  return `https://www.muji.com.cn/cn/store/commodity/${product.id}`;
+}
+
+function linkedName(product) {
+  return `[${linkText(product.name)}](${productLink(product)})`;
+}
+
 export function addedLine(product, number) {
   const suffix = product.partial ? ' · 部分规格' : '';
-  return `${number}. ${product.name}｜¥${money(product.price)}（原¥${money(product.mkt)}，${rateText(product.rate)}）${suffix}`;
+  return `${number}. ${linkedName(product)}｜¥${money(product.price)}（原¥${money(product.mkt)}，${rateText(product.rate)}）${suffix}`;
 }
 
 export function expiredLine(product, number) {
   const reason = REASON_TEXT[product.reason] || '已失效';
-  return `${number}. ${product.name}｜¥${money(product.price)}（原¥${money(product.mkt)}，${rateText(product.rate)}）→ ${reason}`;
+  return `${number}. ${linkedName(product)}｜¥${money(product.price)}（原¥${money(product.mkt)}，${rateText(product.rate)}）→ ${reason}`;
 }
 
 function paginate(title, items, dateStr, lineFn) {

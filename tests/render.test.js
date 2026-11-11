@@ -49,7 +49,7 @@ test('25 款一条，26 款拆成两条且编号连续', () => {
   assert.equal(twoPages.length, 4);
   assert.match(twoPages[1].content, /新增折扣 · 11-09（1\/2，共 26 款）/);
   assert.match(twoPages[2].content, /新增折扣 · 11-09（2\/2，共 26 款）/);
-  assert.match(twoPages[2].content, /26\. 商品26/);
+  assert.match(twoPages[2].content, /26\. \[商品26\]/);
 });
 
 test('部分规格带标记，失效带原因', () => {
@@ -57,8 +57,8 @@ test('部分规格带标记，失效带原因', () => {
   const expired = [product(2, 0.7, { reason: 'delisted', name: '法兰绒 衬衫', price: 290, mkt: 398 })];
   const messages = buildMessages({ mode: 'normal', diff: diffOf(added, expired), date: '2026-11-09' });
 
-  assert.match(messages[1].content, /大童 针织 收腿裤｜¥50（原¥198，2\.5折） · 部分规格/);
-  assert.match(messages[2].content, /法兰绒 衬衫｜¥290（原¥398，7\.0折）→ 已下架/);
+  assert.match(messages[1].content, /\[大童 针织 收腿裤\]\(https:\/\/www\.muji\.com\.cn\/cn\/store\/commodity\/1\)｜¥50（原¥198，2\.5折） · 部分规格/);
+  assert.match(messages[2].content, /\[法兰绒 衬衫\]\(https:\/\/www\.muji\.com\.cn\/cn\/store\/commodity\/2\)｜¥290（原¥398，7\.0折）→ 已下架/);
 });
 
 test('每条消息不超过 3900 字节', () => {
@@ -82,7 +82,33 @@ test('单类超过 750 款时截断并提示', () => {
 test('失效原因支持“已售罄”', () => {
   const expired = [product(1, 0.5, { reason: 'soldout', name: '【芳香油】香精油' })];
   const messages = buildMessages({ mode: 'normal', diff: diffOf([], expired), date: '2026-11-09' });
-  assert.match(messages[2].content, /【芳香油】香精油｜¥50（原¥100，5\.0折）→ 已售罄/);
+  assert.match(messages[2].content, /\[【芳香油】香精油\]\(https:\/\/www\.muji\.com\.cn\/cn\/store\/commodity\/1\)｜¥50（原¥100，5\.0折）→ 已售罄/);
+});
+
+test('商品名渲染为官网详情链接', () => {
+  const added = [product(97255, 0.25, {
+    name: '男式 袋鼠鞋',
+    price: 150,
+    mkt: 598,
+    url: 'https://www.muji.com.cn/cn/store/commodity/97255',
+  })];
+  const messages = buildMessages({ mode: 'normal', diff: diffOf(added), date: '2026-11-09' });
+  assert.match(
+    messages[1].content,
+    /\[男式 袋鼠鞋\]\(https:\/\/www\.muji\.com\.cn\/cn\/store\/commodity\/97255\)｜¥150（原¥598，2\.5折）/,
+  );
+});
+
+test('没有 url 字段时用商品 ID 拼接链接', () => {
+  const messages = buildMessages({ mode: 'normal', diff: diffOf([product(12345, 0.5)]), date: '2026-11-09' });
+  assert.match(messages[1].content, /\[商品12345\]\(https:\/\/www\.muji\.com\.cn\/cn\/store\/commodity\/12345\)/);
+});
+
+test('商品名中的 ASCII 方括号被替换，链接保持闭合', () => {
+  const added = [product(1, 0.5, { name: '测试[限定]商品' })];
+  const messages = buildMessages({ mode: 'normal', diff: diffOf(added), date: '2026-11-09' });
+  assert.match(messages[1].content, /\[测试［限定］商品\]\(https:\/\/www\.muji\.com\.cn\/cn\/store\/commodity\/1\)/);
+  assert.doesNotMatch(messages[1].content, /\[测试\[限定\]商品\]/);
 });
 
 test('首次运行只发一条初始化消息', () => {
