@@ -8,6 +8,7 @@ import {
   is026OnlyAuditCandidate,
   isMSizeSku,
 } from '../scripts/filters.js';
+import { buildCategoryIndex } from '../scripts/crawl.js';
 
 function indexFor(cat1, cat2, top = '衣服·杂货') {
   return {
@@ -61,6 +62,25 @@ test('规则①：家具、电子产品、清扫洗涤·卫浴用品、收纳储
     assert.equal(result.drop, true, cat1);
     assert.equal(result.layer, 'category', cat1);
   }
+});
+
+test('规则①：三级分类 MUJI IDEE FURNITURE 也被排除', () => {
+  const result = evaluateFilters(
+    detail({ name: 'DJANGO 扶手椅 IDEE' }),
+    { selLineCd: 'LINE1' },
+    indexFor('MUJI IDÉE', 'MUJI IDEE FURNITURE', '生活杂货'),
+  );
+  assert.equal(result.drop, true);
+  assert.equal(result.layer, 'category');
+});
+
+test('3801/3802 商品线手动映射到 MUJI IDEE FURNITURE', () => {
+  const index = buildCategoryIndex([
+    { id: 1, grade: 0, parentId: 0, cateName: '生活杂货' },
+    { id: 2, grade: 1, parentId: 1, cateName: 'MUJI IDÉE' },
+  ]);
+  assert.deepEqual(index.lineMap.get('3801'), { cat1: 'MUJI IDÉE', cat2: 'MUJI IDEE FURNITURE' });
+  assert.deepEqual(index.lineMap.get('3802'), { cat1: 'MUJI IDÉE', cat2: 'MUJI IDEE FURNITURE' });
 });
 
 test('规则②：四个分类里名称含“女”才排除，男女通用/中性不误伤', () => {

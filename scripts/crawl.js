@@ -1,5 +1,6 @@
 import {
   CONCURRENCY,
+  LINE_CATEGORY_OVERRIDES,
   PAGE_SIZE,
   PROVINCE_CD,
   REQUEST_RETRIES,
@@ -60,6 +61,11 @@ export function buildCategoryIndex(list) {
     const root = byId.get(item.parentId);
     topByCat1[item.cateName] = root ? root.cateName : '';
   }
+
+  for (const [line, category] of Object.entries(LINE_CATEGORY_OVERRIDES)) {
+    if (!lineMap.has(line)) lineMap.set(line, category);
+  }
+
   return { lineMap, topByCat1 };
 }
 

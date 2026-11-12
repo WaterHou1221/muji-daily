@@ -32,7 +32,7 @@ export const REPORT_RETAIN_DAYS = 30;
 export const HISTORY_LENGTH = 14;
 
 // 过滤规则版本：修改过滤/计价条件时递增，触发基线重建
-export const FILTER_VERSION = 4;
+export const FILTER_VERSION = 5;
 
 // 规则①：按分类整类排除
 export const EXCLUDE_CAT1 = [
@@ -46,7 +46,13 @@ export const EXCLUDE_CAT1 = [
   '清扫洗涤·卫浴用品',
   '收纳储物',
 ];
-export const EXCLUDE_CAT2 = ['鞋类'];
+export const EXCLUDE_CAT2 = ['鞋类', 'MUJI IDEE FURNITURE'];
+
+// 官网类目表未登记的 selLineCd，手动归类，供过滤规则使用
+export const LINE_CATEGORY_OVERRIDES = {
+  3801: { cat1: 'MUJI IDÉE', cat2: 'MUJI IDEE FURNITURE' },
+  3802: { cat1: 'MUJI IDÉE', cat2: 'MUJI IDEE FURNITURE' },
+};
 
 // 规则②：在这些二级分类里，商品名命中女性关键词则排除
 export const NAME_FILTER_CAT1 = ['MUJI LABO', 'MUJI IDÉE WEAR', 'MUJI IDÉE', '服饰杂货', '鞋包'];
