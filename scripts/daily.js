@@ -27,7 +27,7 @@ function log(message) {
   console.log(message);
 }
 
-function writeSummary(stateDir, { today, products, diff, failures, messageCount, failedCount, elapsed, filterStats }) {
+function writeSummary(stateDir, { today, products, diff, failures, messageCount, failedCount, elapsed, filterStats, mNoDiscount }) {
   const filterLine = filterStats
     ? `- 过滤：分类 ${filterStats.category}，名称 ${filterStats.name}，M码 ${filterStats.msize}（保留 ${filterStats.kept}/${filterStats.input}）`
     : null;
@@ -38,6 +38,7 @@ function writeSummary(stateDir, { today, products, diff, failures, messageCount,
     `- 新增：${diff.added.length} 款`,
     `- 失效：${diff.expired.length} 款`,
     `- 售罄未计入：${diff.soldOut.length} 款`,
+    ...(mNoDiscount ? [`- M有货但无折扣排除：${mNoDiscount} 款`] : []),
     ...(filterLine ? [filterLine] : []),
     `- 详情失败：${failures.length} 个`,
     `- 消息：${messageCount} 条，失败 ${failedCount} 条`,
@@ -99,8 +100,8 @@ async function main() {
     const samples = filtered.audit.slice(0, 5).map((item) => `${item.id} ${item.name}（${item.cat1}）`).join('；');
     log(`  [audit] 仅 026（女式M）且通过 ①② 的商品 ${filtered.audit.length} 个：${samples}`);
   }
-  const { products, soldOut } = buildDiscounts(filtered.details, catalog, index);
-  log(`  折扣商品 ${products.length} 款（另有 ${soldOut.length} 款折扣规格全部无货，未纳入）`);
+  const { products, soldOut, mNoDiscount } = buildDiscounts(filtered.details, catalog, index);
+  log(`  折扣商品 ${products.length} 款（M 有货但无折扣排除 ${mNoDiscount} 款；另有 ${soldOut.length} 款折扣规格全部无货，未纳入）`);
 
   const prev = last && !versionMismatch ? store.loadSnapshot(stateDir, last.date) : null;
   if (last && !prev && !versionMismatch) log(`  [warn] 找不到 ${last.date} 的快照，按首次运行处理`);
@@ -173,7 +174,7 @@ async function main() {
 
   if (args.noSend) {
     const elapsed = ((Date.now() - started) / 1000).toFixed(0);
-    writeSummary(stateDir, { today, products, diff, failures, messageCount: toSend.length, failedCount: 0, elapsed, filterStats: filtered.stats });
+    writeSummary(stateDir, { today, products, diff, failures, messageCount: toSend.length, failedCount: 0, elapsed, filterStats: filtered.stats, mNoDiscount });
     log(`[no-send] 已写入状态，未推送消息；耗时 ${elapsed}s`);
     return;
   }
@@ -185,7 +186,7 @@ async function main() {
   if (pending.length && sendFailures.length === 0) log('  待补发消息已发送并清空');
 
   const elapsed = ((Date.now() - started) / 1000).toFixed(0);
-  writeSummary(stateDir, { today, products, diff, failures, messageCount: toSend.length, failedCount: sendFailures.length, elapsed, filterStats: filtered.stats });
+  writeSummary(stateDir, { today, products, diff, failures, messageCount: toSend.length, failedCount: sendFailures.length, elapsed, filterStats: filtered.stats, mNoDiscount });
   log(`完成，耗时 ${elapsed}s，消息失败 ${sendFailures.length}/${toSend.length}`);
 
   if (toSend.length > 0 && sendFailures.length === toSend.length) {

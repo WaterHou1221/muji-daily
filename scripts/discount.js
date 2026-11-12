@@ -1,3 +1,11 @@
+import { M_ONLY_PRICING, M_SIZE_CDS, M_SIZE_TOP } from './config.js';
+
+const M_SIZE_CD_SET = new Set(M_SIZE_CDS.map((code) => String(code).trim()));
+
+function isMSizeSku(sku) {
+  return M_SIZE_CD_SET.has(String(sku?.sizeCd ?? '').trim());
+}
+
 function inferCategory(name, sex) {
   const text = (name || '').trim();
   if (/^男式|^男士/.test(text)) return { cat1: '男式服装', cat2: '男式服装（自动归类）' };
@@ -56,15 +64,24 @@ export function resolveCategory(detail, base, index) {
 export function buildDiscounts(details, catalog, index) {
   const products = [];
   const soldOut = [];
+  let mNoDiscount = 0;
 
   for (const detail of details) {
     const base = catalog.get(detail.id) || {};
     const { top, cat1, cat2 } = resolveCategory(detail, base, index);
     const valid = (detail.skus || []).filter((sku) => Number(sku.mktPrice) > 0);
     const available = valid.filter((sku) => Number(sku.stock) > 0);
-    const discounted = available.filter((sku) => Number(sku.price) < Number(sku.mktPrice));
+    const hasM = M_ONLY_PRICING && top === M_SIZE_TOP && valid.some(isMSizeSku);
+    const pricingPool = hasM ? available.filter(isMSizeSku) : available;
+    const discounted = pricingPool.filter((sku) => Number(sku.price) < Number(sku.mktPrice));
+
     if (!discounted.length) {
-      if (valid.some((sku) => Number(sku.price) < Number(sku.mktPrice))) {
+      if (hasM) {
+        const nonMDiscounted = available.some(
+          (sku) => !isMSizeSku(sku) && Number(sku.price) < Number(sku.mktPrice),
+        );
+        if (nonMDiscounted) mNoDiscount += 1;
+      } else if (valid.some((sku) => Number(sku.price) < Number(sku.mktPrice))) {
         soldOut.push({ id: detail.id, name: String(detail.name || '').trim() });
       }
       continue;
@@ -92,11 +109,12 @@ export function buildDiscounts(details, catalog, index) {
       price,
       mkt,
       rate: Number((price / mkt).toFixed(4)),
-      partial: discounted.length < available.length,
+      partial: discounted.length < pricingPool.length,
       skuCount: available.length,
       discSkuCount: discounted.length,
       inStockSkus: discounted.length,
       stock: discounted.reduce((sum, sku) => sum + (Number(sku.stock) || 0), 0),
+      pricingScope: hasM ? 'M' : 'all',
       promos: [...new Set((detail.promotions || []).map((promo) => promo.name).filter(Boolean))],
       skus: available.map((sku) => ({
         skuCd: sku.skuCd,
@@ -110,5 +128,5 @@ export function buildDiscounts(details, catalog, index) {
   }
 
   const byId = new Map(products.map((product) => [product.id, product]));
-  return { products, soldOut, byId };
+  return { products, soldOut, mNoDiscount, byId };
 }
