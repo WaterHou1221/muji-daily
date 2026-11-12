@@ -1,0 +1,24 @@
+{
+ "version": 1,
+ "filterVersion": 2,
+ "date": "2026-11-12",
+ "runAt": "2026-11-12T07:21:24.323Z",
+ "mode": "init",
+ "total": 591,
+ "added": 591,
+ "expired": 0,
+ "soldOut": 113,
+ "filter": {
+  "input": 3586,
+  "kept": 2266,
+  "category": 1140,
+  "name": 88,
+  "msize": 92
+ },
+ "history": [
+  {
+   "date": "2026-11-12",
+   "total": 591
+  }
+ ]
+}
