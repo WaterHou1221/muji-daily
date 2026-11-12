@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { CONCURRENCY, FILTER_VERSION } from './config.js';
-import { fetchCatalog, fetchCategories, fetchDetails } from './crawl.js';
+import { CONCURRENCY, FILTER_VERSION, PROVINCE_CD } from './config.js';
+import { fetchCatalog, fetchCategories, fetchDetails, fetchProvinces, isKnownProvince } from './crawl.js';
 import { buildDiscounts } from './discount.js';
 import { compare } from './diff.js';
 import { filterDetails } from './filters.js';
@@ -76,6 +76,13 @@ async function main() {
     log(`  类目接口失败，退回名称归类：${error.message}`);
     return { lineMap: new Map(), topByCat1: {} };
   });
+  const provinces = await fetchProvinces().catch((error) => {
+    log(`  地区表接口失败，跳过省码校验：${error.message}`);
+    return null;
+  });
+  if (provinces && !isKnownProvince(PROVINCE_CD, provinces)) {
+    throw new Error(`PROVINCE_CD=${PROVINCE_CD} 不是合法的省级短码（上海应为 31，不是 310000）`);
+  }
   const { catalog, list } = await fetchCatalog();
   log(`  在售商品 ${list.length} 个`);
 
@@ -101,7 +108,6 @@ async function main() {
   log(`[4/6] 对比基线 ${prev ? prev.date : '（无，首次运行）'}`);
   const diff = compare(prev?.products || [], products, {
     prevDate: prev?.date || null,
-    catalogIds: new Set(catalog.keys()),
     failures,
     history: last?.history || [],
     soldOut,

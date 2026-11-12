@@ -86,14 +86,8 @@ function csvCell(value) {
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
-const REPORT_REASON_TEXT = { restored: '已恢复原价', delisted: '已下架', soldout: '已售罄', missing: '数据缺失' };
-
 function reportLine(product, number) {
   return `${number}. ${product.name}｜¥${product.price}（原¥${product.mkt}，${(product.rate * 10).toFixed(1)}折）`;
-}
-
-function expiredLine(product, number) {
-  return `${reportLine(product, number)}→ ${REPORT_REASON_TEXT[product.reason] || '已失效'}`;
 }
 
 function appendSection(lines, title, items, lineFn) {
@@ -128,7 +122,7 @@ export function buildReportMarkdown(date, { products, diff, mode = 'normal' }) {
     '',
   ];
   appendSection(lines, mode === 'init' ? '初始基线商品' : '新增折扣', diff.added, reportLine);
-  appendSection(lines, '失效折扣', diff.expired, expiredLine);
+  appendSection(lines, '失效折扣', diff.expired, reportLine);
   return lines.join('\n');
 }
 

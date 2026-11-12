@@ -1,12 +1,5 @@
 import { ITEMS_PER_MESSAGE, MAX_PAGES_PER_SECTION, MESSAGE_BYTE_LIMIT } from './config.js';
 
-const REASON_TEXT = {
-  restored: '已恢复原价',
-  delisted: '已下架',
-  soldout: '已售罄',
-  missing: '数据缺失',
-};
-
 export function formatDateCST(dateStr) {
   const [year, month, day] = dateStr.split('-').map(Number);
   const date = new Date(`${dateStr}T12:00:00+08:00`);
@@ -41,14 +34,17 @@ function linkedName(product) {
   return `[${linkText(product.name)}](${productLink(product)})`;
 }
 
+function baseLine(product, number) {
+  return `${number}. ${linkedName(product)}｜¥${money(product.price)}（原¥${money(product.mkt)}，${rateText(product.rate)}）`;
+}
+
 export function addedLine(product, number) {
   const suffix = product.partial ? ' · 部分规格' : '';
-  return `${number}. ${linkedName(product)}｜¥${money(product.price)}（原¥${money(product.mkt)}，${rateText(product.rate)}）${suffix}`;
+  return `${baseLine(product, number)}${suffix}`;
 }
 
 export function expiredLine(product, number) {
-  const reason = REASON_TEXT[product.reason] || '已失效';
-  return `${number}. ${linkedName(product)}｜¥${money(product.price)}（原¥${money(product.mkt)}，${rateText(product.rate)}）→ ${reason}`;
+  return baseLine(product, number);
 }
 
 function paginate(title, items, dateStr, lineFn) {

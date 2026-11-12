@@ -52,13 +52,14 @@ test('25 款一条，26 款拆成两条且编号连续', () => {
   assert.match(twoPages[2].content, /26\. \[商品26\]/);
 });
 
-test('部分规格带标记，失效带原因', () => {
+test('部分规格带标记，失效不带原因', () => {
   const added = [product(1, 0.25, { partial: true, name: '大童 针织 收腿裤', price: 50, mkt: 198 })];
   const expired = [product(2, 0.7, { reason: 'delisted', name: '法兰绒 衬衫', price: 290, mkt: 398 })];
   const messages = buildMessages({ mode: 'normal', diff: diffOf(added, expired), date: '2026-11-09' });
 
   assert.match(messages[1].content, /\[大童 针织 收腿裤\]\(https:\/\/www\.muji\.com\.cn\/cn\/store\/commodity\/1\)｜¥50（原¥198，2\.5折） · 部分规格/);
-  assert.match(messages[2].content, /\[法兰绒 衬衫\]\(https:\/\/www\.muji\.com\.cn\/cn\/store\/commodity\/2\)｜¥290（原¥398，7\.0折）→ 已下架/);
+  assert.match(messages[2].content, /\[法兰绒 衬衫\]\(https:\/\/www\.muji\.com\.cn\/cn\/store\/commodity\/2\)｜¥290（原¥398，7\.0折）$/m);
+  assert.doesNotMatch(messages[2].content, /→/);
 });
 
 test('每条消息不超过 3900 字节', () => {
@@ -79,10 +80,11 @@ test('单类超过 750 款时截断并提示', () => {
   assert.match(addedPages[29].content, /其余 50 款未发送（单日上限）/);
 });
 
-test('失效原因支持“已售罄”', () => {
+test('失效消息不再附带细分原因', () => {
   const expired = [product(1, 0.5, { reason: 'soldout', name: '【芳香油】香精油' })];
   const messages = buildMessages({ mode: 'normal', diff: diffOf([], expired), date: '2026-11-09' });
-  assert.match(messages[2].content, /\[【芳香油】香精油\]\(https:\/\/www\.muji\.com\.cn\/cn\/store\/commodity\/1\)｜¥50（原¥100，5\.0折）→ 已售罄/);
+  assert.match(messages[2].content, /\[【芳香油】香精油\]\(https:\/\/www\.muji\.com\.cn\/cn\/store\/commodity\/1\)｜¥50（原¥100，5\.0折）$/m);
+  assert.doesNotMatch(messages[2].content, /→|已售罄|已下架|已恢复原价/);
 });
 
 test('商品名渲染为官网详情链接', () => {

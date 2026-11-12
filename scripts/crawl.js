@@ -32,6 +32,16 @@ export async function fetchCategories() {
   return buildCategoryIndex(data.list || []);
 }
 
+export async function fetchProvinces() {
+  const data = await get('/delivery/regions', { parentShortCd: '0' });
+  return data.list || data || [];
+}
+
+export function isKnownProvince(code, provinces) {
+  const target = String(code ?? '').trim();
+  return (provinces || []).some((item) => String(item.shortCd ?? '').trim() === target);
+}
+
 export function buildCategoryIndex(list) {
   const byId = new Map(list.map((item) => [item.id, item]));
   const lineMap = new Map();

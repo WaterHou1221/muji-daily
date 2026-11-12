@@ -15,11 +15,10 @@ function median(values) {
 
 /**
  * 商品级 diff。curr 里若某商品本轮详情抓取失败，会沿用上一份快照（carry-forward），
- * 连续失败超过 STALE_MAX_DAYS 天才降级为“数据缺失”并按失效处理。
+ * 连续失败超过 STALE_MAX_DAYS 天才按失效处理。
  */
 export function compare(prevProducts = [], currProducts = [], {
   prevDate = null,
-  catalogIds = new Set(),
   failures = [],
   history = [],
   soldOut = [],
@@ -27,7 +26,6 @@ export function compare(prevProducts = [], currProducts = [], {
   const prevMap = new Map(prevProducts.map((product) => [product.id, product]));
   const currMap = new Map(currProducts.map((product) => [product.id, product]));
   const failedIds = new Set(failures.map((item) => item.id));
-  const soldOutIds = new Set(soldOut.map((item) => item.id));
 
   const carried = [];
   for (const [id, prev] of prevMap) {
@@ -40,18 +38,7 @@ export function compare(prevProducts = [], currProducts = [], {
 
   const added = [...currMap.values()].filter((product) => !prevMap.has(product.id) && !product.stale);
 
-  const expired = [...prevMap.values()]
-    .filter((product) => !currMap.has(product.id))
-    .map((product) => ({
-      ...product,
-      reason: failedIds.has(product.id)
-        ? 'missing'
-        : soldOutIds.has(product.id)
-          ? 'soldout'
-          : catalogIds.has(product.id)
-            ? 'restored'
-            : 'delisted',
-    }));
+  const expired = [...prevMap.values()].filter((product) => !currMap.has(product.id));
 
   const deepened = [...currMap.values()].filter((product) => {
     const prev = prevMap.get(product.id);

@@ -31,8 +31,8 @@ test('可读版日报收录全部条目，并按 25 条分页', () => {
   assert.match(md, /### 新增折扣（1\/2）/);
   assert.match(md, /### 新增折扣（2\/2）/);
   assert.match(md, /30\. 商品30/);
-  assert.match(md, /→ 已恢复原价/);
-  assert.match(md, /→ 已下架/);
+  assert.match(md, /2\. 商品102/);
+  assert.doesNotMatch(md, /→/);
   assert.doesNotMatch(md, /前 50/);
 
   const numbered = md.split('\n').filter((line) => /^\d+\. /.test(line));
