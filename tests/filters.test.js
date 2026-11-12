@@ -51,6 +51,18 @@ test('规则①：整类排除女式服装、童装与三级分类鞋类', () =>
   assert.equal(men.drop, false);
 });
 
+test('规则①：家具、电子产品、清扫洗涤·卫浴用品、收纳储物也被排除', () => {
+  for (const cat1 of ['家具', '电子产品', '清扫洗涤·卫浴用品', '收纳储物']) {
+    const result = evaluateFilters(
+      detail({ name: '测试商品' }),
+      { selLineCd: 'LINE1' },
+      indexFor(cat1, '子类'),
+    );
+    assert.equal(result.drop, true, cat1);
+    assert.equal(result.layer, 'category', cat1);
+  }
+});
+
 test('规则②：四个分类里名称含“女”才排除，男女通用/中性不误伤', () => {
   assert.equal(hasFemaleKeyword('女式 法兰绒 衬衫'), true);
   assert.equal(hasFemaleKeyword('女士 开衫'), true);
@@ -134,9 +146,9 @@ test('规则③：026（女式M）不算 M，只做审计；非衣服·杂货不
   assert.equal(is026OnlyAuditCandidate(womenM), true);
 
   const home = evaluateFilters(
-    detail({ name: '收纳盒' }),
+    detail({ name: '测试旅行袋' }),
     { selLineCd: 'LINE1' },
-    indexFor('家具', '收纳', '生活杂货'),
+    indexFor('旅行用品', '旅行用具', '生活杂货'),
   );
   assert.equal(home.drop, false);
 });

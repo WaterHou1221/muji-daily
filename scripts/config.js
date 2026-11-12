@@ -32,10 +32,20 @@ export const REPORT_RETAIN_DAYS = 30;
 export const HISTORY_LENGTH = 14;
 
 // 过滤规则版本：修改过滤/计价条件时递增，触发基线重建
-export const FILTER_VERSION = 3;
+export const FILTER_VERSION = 4;
 
 // 规则①：按分类整类排除
-export const EXCLUDE_CAT1 = ['女式服装', '女式内衣/睡衣', '美妆护肤', '芳香用品', '童装'];
+export const EXCLUDE_CAT1 = [
+  '女式服装',
+  '女式内衣/睡衣',
+  '美妆护肤',
+  '芳香用品',
+  '童装',
+  '家具',
+  '电子产品',
+  '清扫洗涤·卫浴用品',
+  '收纳储物',
+];
 export const EXCLUDE_CAT2 = ['鞋类'];
 
 // 规则②：在这些二级分类里，商品名命中女性关键词则排除
