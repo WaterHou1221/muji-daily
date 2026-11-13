@@ -13,6 +13,11 @@ function median(values) {
   return list.length % 2 ? list[middle] : (list[middle - 1] + list[middle]) / 2;
 }
 
+// 按展示精度（折，1 位小数）比较折扣率，避免看不见的微小变化刷屏
+function displayRate(rate) {
+  return Number((Number(rate) * 10).toFixed(1));
+}
+
 /**
  * 商品级 diff。curr 里若某商品本轮详情抓取失败，会沿用上一份快照（carry-forward），
  * 连续失败超过 STALE_MAX_DAYS 天才按失效处理。
@@ -37,6 +42,22 @@ export function compare(prevProducts = [], currProducts = [], {
   }
 
   const added = [...currMap.values()].filter((product) => !prevMap.has(product.id) && !product.stale);
+
+  const changed = [...currMap.values()]
+    .filter((product) => prevMap.has(product.id) && !product.stale)
+    .map((product) => {
+      const prev = prevMap.get(product.id);
+      const prevDisplay = displayRate(prev.rate);
+      const currDisplay = displayRate(product.rate);
+      if (!Number.isFinite(prevDisplay) || !Number.isFinite(currDisplay) || prevDisplay === currDisplay) return null;
+      return {
+        ...product,
+        prevRate: prev.rate,
+        currRate: product.rate,
+        rateDirection: currDisplay < prevDisplay ? 'down' : 'up',
+      };
+    })
+    .filter(Boolean);
 
   const expired = [...prevMap.values()].filter((product) => !currMap.has(product.id));
 
@@ -74,6 +95,7 @@ export function compare(prevProducts = [], currProducts = [], {
   return {
     prevDate,
     added,
+    changed,
     expired,
     soldOut,
     deepened,
@@ -81,6 +103,7 @@ export function compare(prevProducts = [], currProducts = [], {
     stats: {
       total,
       added: added.length,
+      changed: changed.length,
       expired: expired.length,
       soldOut: soldOut.length,
       deepened: deepened.length,

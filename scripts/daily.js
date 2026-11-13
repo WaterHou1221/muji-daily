@@ -36,6 +36,7 @@ function writeSummary(stateDir, { today, products, diff, failures, messageCount,
     '',
     `- 折扣商品：${products.length} 款`,
     `- 新增：${diff.added.length} 款`,
+    `- 折扣率变动：${diff.changed.length} 款`,
     `- 失效：${diff.expired.length} 款`,
     `- 售罄未计入：${diff.soldOut.length} 款`,
     ...(mNoDiscount ? [`- M有货但无折扣排除：${mNoDiscount} 款`] : []),
@@ -113,6 +114,7 @@ async function main() {
     history: last?.history || [],
     soldOut,
   });
+  log(`  新增 ${diff.added.length} 款，折扣率变动 ${diff.changed.length} 款，失效 ${diff.expired.length} 款`);
 
   const mode = prev ? 'normal' : 'init';
   if (mode === 'normal' && diff.anomalies.length && !args.force) {

@@ -16,11 +16,12 @@ function product(id, rate, extra = {}) {
   };
 }
 
-function diffOf(added = [], expired = []) {
+function diffOf(added = [], expired = [], changed = []) {
   return {
     added,
     expired,
-    stats: { total: added.length + expired.length },
+    changed,
+    stats: { total: added.length + expired.length + changed.length },
   };
 }
 
@@ -111,6 +112,19 @@ test('商品名中的 ASCII 方括号被替换，链接保持闭合', () => {
   const messages = buildMessages({ mode: 'normal', diff: diffOf(added), date: '2026-11-09' });
   assert.match(messages[1].content, /\[测试［限定］商品\]\(https:\/\/www\.muji\.com\.cn\/cn\/store\/commodity\/1\)/);
   assert.doesNotMatch(messages[1].content, /\[测试\[限定\]商品\]/);
+});
+
+test('折扣率变动并入新增并带 ↓/↑ 箭头', () => {
+  const added = [product(1, 0.7, { name: '真新增商品', price: 70, mkt: 100 })];
+  const down = product(2, 0.6061, { name: '降价商品', price: 120, mkt: 198, rateDirection: 'down', partial: true });
+  const up = product(3, 0.7576, { name: '涨价商品', price: 150, mkt: 198, rateDirection: 'up' });
+  const messages = buildMessages({ mode: 'normal', diff: diffOf(added, [], [down, up]), date: '2026-11-09' });
+  const content = messages[1].content;
+
+  assert.match(content, /新增折扣 · 11-09（3 款）/);
+  assert.match(content, /降价商品.*6\.1折） ↓ · 部分规格/);
+  assert.match(content, /涨价商品.*7\.6折） ↑/);
+  assert.doesNotMatch(content, /原 7|原 6/);
 });
 
 test('首次运行只发一条初始化消息', () => {

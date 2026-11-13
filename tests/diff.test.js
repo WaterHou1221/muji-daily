@@ -27,6 +27,17 @@ test('识别新增与失效', () => {
   assert.equal(diff.stats.total, 2);
 });
 
+test('折扣率变化进入 changed 并标记方向', () => {
+  const prev = [product(1, 0.76), product(2, 0.71), product(3, 0.782)];
+  const curr = [product(1, 0.61), product(2, 0.76), product(3, 0.779)];
+  const diff = compare(prev, curr, {});
+
+  assert.deepEqual(diff.changed.map((item) => [item.id, item.rateDirection]), [[1, 'down'], [2, 'up']]);
+  assert.equal(diff.changed.length, 2);
+  assert.equal(diff.stats.changed, 2);
+  assert.equal(diff.added.length, 0);
+});
+
 test('详情失败时沿用上一份快照，不判失效', () => {
   const prev = [product(1, 0.7)];
   const diff = compare(prev, [], { failures: [{ id: 1, message: 'timeout' }] });

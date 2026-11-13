@@ -39,8 +39,9 @@ function baseLine(product, number) {
 }
 
 export function addedLine(product, number) {
+  const arrow = product.rateDirection === 'down' ? ' ↓' : product.rateDirection === 'up' ? ' ↑' : '';
   const suffix = product.partial ? ' · 部分规格' : '';
-  return `${baseLine(product, number)}${suffix}`;
+  return `${baseLine(product, number)}${arrow}${suffix}`;
 }
 
 export function expiredLine(product, number) {
@@ -91,11 +92,12 @@ export function buildMessages({ mode = 'normal', diff, date, prevDate = null }) 
     }];
   }
 
-  const added = [...diff.added].sort((a, b) => a.rate - b.rate || b.mkt - a.mkt || a.id - b.id);
+  const reported = [...diff.added, ...(diff.changed || [])]
+    .sort((a, b) => a.rate - b.rate || b.mkt - a.mkt || a.id - b.id);
   const expired = [...diff.expired].sort((a, b) => b.mkt - a.mkt || a.id - b.id);
 
   const messages = [{ type: 'text', content: formatDateCST(date) }];
-  messages.push(...paginate('新增折扣', added, date, addedLine));
+  messages.push(...paginate('新增折扣', reported, date, addedLine));
   messages.push(...paginate('失效折扣', expired, date, expiredLine));
 
   return messages.map((message, index) => ({ ...message, seq: index + 1 }));
