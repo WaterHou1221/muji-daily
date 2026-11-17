@@ -1,6 +1,6 @@
 # MUJI 折扣日报
 
-每天北京时间 09:00 抓取无印良品（中国）官网在售商品，逐个 SKU 比对售价与吊牌价，把「当天新增折扣」和「当天失效折扣」推送到企业微信群。
+每天北京时间 08:00 抓取无印良品（中国）官网在售商品，逐个 SKU 比对售价与吊牌价，把「当天新增折扣」和「当天失效折扣」推送到企业微信群。
 
 官方微信小程序与官网共用同一套商品接口，因此本名单与小程序中的 SALE / 限时特惠一致。
 
@@ -114,7 +114,7 @@ node tests/diff.test.js     # 单文件（受限环境可用）
 
 ## GitHub Actions
 
-- 触发：`cron "0 1 * * *"`（UTC，对应北京 09:00）+ 手动 `workflow_dispatch`（可传 `force` / `dry_run`）。
+- 触发：`cron "0 0 * * *"`（UTC，对应北京 08:00）+ 手动 `workflow_dispatch`（可传 `force` / `dry_run`）。
 - 权限：`contents: write`，用内置 `GITHUB_TOKEN` 提交 `state/`。
 - 并发：`concurrency: muji-daily`，避免两次运行抢 push。
 - 失败：脚本会向企业微信发失败告警；`state/` 仍会在 `if: always()` 步骤中提交。
