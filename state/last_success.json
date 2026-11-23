@@ -1,19 +1,19 @@
 {
  "version": 1,
  "filterVersion": 5,
- "date": "2026-11-22",
- "runAt": "2026-11-22T00:33:44.252Z",
+ "date": "2026-11-23",
+ "runAt": "2026-11-23T00:41:13.276Z",
  "mode": "normal",
- "total": 324,
- "added": 11,
- "expired": 10,
- "soldOut": 92,
+ "total": 319,
+ "added": 7,
+ "expired": 12,
+ "soldOut": 88,
  "filter": {
-  "input": 3800,
-  "kept": 1785,
-  "category": 1793,
-  "name": 117,
-  "msize": 105
+  "input": 3760,
+  "kept": 1756,
+  "category": 1787,
+  "name": 114,
+  "msize": 103
  },
  "history": [
   {
@@ -59,6 +59,10 @@
   {
    "date": "2026-11-22",
    "total": 324
+  },
+  {
+   "date": "2026-11-23",
+   "total": 319
   }
  ]
 }
